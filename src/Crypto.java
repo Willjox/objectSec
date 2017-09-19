@@ -64,16 +64,23 @@ public class Crypto {
 		
 	}
 	
+	public byte[] getP() {
+		return DHPara.getP().toByteArray();
+	}
+	public byte[] getG() {
+		return DHPara.getG().toByteArray();
+	}
 	public byte[] sendSecret() {
 		return secretGen.calculateMessage().toByteArray();
 	}
 	
-	public void deriveKey(DHPublicKeyParameters pub, BigInteger message) {
-		
-		String key = secretGen.calculateAgreement(pub, message).toString();
+	public void deriveKey(byte[] publicKey, BigInteger message) {
+		BigInteger intKey = new BigInteger(publicKey);
+		DHPublicKeyParameters pub = new DHPublicKeyParameters(intKey,DHPara);
+		byte[] key = secretGen.calculateAgreement(pub, message).toByteArray();
 		byte[] derivedKey = new byte[16];
 		for (int i = 0; i < 15; i++) {
-			derivedKey[i] = (byte) key.charAt(i);
+			derivedKey[i] =  key[i];
 		}
 		secretKeySha1 =  new SecretKeySpec(derivedKey, 0, derivedKey.length, "Sha1");
 		

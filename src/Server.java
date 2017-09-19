@@ -1,9 +1,15 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 public class Server {
-
+	Crypto crypt;
 	public static void main(String[] args) throws Exception {
 		DatagramSocket serverSocket = new DatagramSocket(4000);
 		while (true) {
@@ -22,5 +28,16 @@ public class Server {
 		}
 
 	}
-
+ private byte[] handShakeG() {
+	 return crypt.getG();
+ }
+ private byte[] handShakeP() {
+	 return crypt.getP();
+ }
+ private byte[] handShakeKey() {
+	 return crypt.sendSecret();
+ }
+ private byte[] encrypt(String plainText) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+	 return crypt.encrypt(plainText.getBytes());
+ }
 }
