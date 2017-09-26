@@ -6,9 +6,11 @@ import org.bouncycastle.crypto.agreement.DHAgreement;
 import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
 import org.bouncycastle.crypto.generators.DHParametersGenerator;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.params.DHKeyGenerationParameters;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -16,6 +18,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.Security;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -45,6 +48,8 @@ public class Crypto {
 		DHParametersGenerator paraGen = new DHParametersGenerator();
 		paraGen.init(1024, 1024, new SecureRandom());
 		DHPara = paraGen.generateParameters();
+		Security.addProvider(new BouncyCastleProvider());
+		init();
 	}
 	
 	public Crypto(BigInteger p ,BigInteger g) {
@@ -53,12 +58,14 @@ public class Crypto {
 	}
 	
 	private void init() {
-		keyGen.init(new KeyGenerationParameters(new SecureRandom(), 1024));
+		System.out.println("KEYGENasfFSAFAFafASFASFASFASFASF");
+		DHKeyPairGenerator keyGen = new DHKeyPairGenerator();
+		keyGen.init(new DHKeyGenerationParameters(new SecureRandom(), DHPara));
 		keyPair = keyGen.generateKeyPair();
-		privKey = (DHPrivateKey) keyPair.getPrivate();
-		pubKey = (DHPublicKey) keyPair.getPublic();
-		DHPubKeyPara = new DHPublicKeyParameters( pubKey.getY() ,DHPara);
-		DHPrivKeyPara = new DHPrivateKeyParameters(privKey.getX(),DHPara);
+		//DHPubKeyPara = new DHPublicKeyParameters( pubKey.getY() ,DHPara);
+		//DHPrivKeyPara = new DHPrivateKeyParameters(privKey.getX(),DHPara);
+		DHPubKeyPara = (DHPublicKeyParameters) keyPair.getPublic();
+		DHPrivKeyPara = (DHPrivateKeyParameters) keyPair.getPrivate();
 		secretGen = new DHAgreement();
 		secretGen.init(DHPrivKeyPara);
 		
@@ -83,7 +90,7 @@ public class Crypto {
 			derivedKey[i] =  key[i];
 		}
 		secretKeySha1 =  new SecretKeySpec(derivedKey, 0, derivedKey.length, "Sha1");
-		
+		secretKeyAes =  new SecretKeySpec(derivedKey, 0, derivedKey.length, "AES");
 		
 	}
 	
