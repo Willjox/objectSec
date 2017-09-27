@@ -81,10 +81,11 @@ public class Crypto {
 		return secretGen.calculateMessage().toByteArray();
 	}
 	
-	public void deriveKey(byte[] publicKey, BigInteger message) {
+	public void deriveKey(byte[] publicKey, byte[] message) {
 		BigInteger intKey = new BigInteger(publicKey);
+		BigInteger intMsg = new BigInteger(message);
 		DHPublicKeyParameters pub = new DHPublicKeyParameters(intKey,DHPara);
-		byte[] key = secretGen.calculateAgreement(pub, message).toByteArray();
+		byte[] key = secretGen.calculateAgreement(pub, intMsg).toByteArray();
 		byte[] derivedKey = new byte[16];
 		for (int i = 0; i < 15; i++) {
 			derivedKey[i] =  key[i];
