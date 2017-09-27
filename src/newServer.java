@@ -11,21 +11,13 @@ import org.bouncycastle.asn1.x9.DHPublicKey;
 
 class newServer {
 
-	public static void main(String[] args) throws Exception {
-		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-		DatagramSocket clientSocket = new DatagramSocket();
+	public void main(String[] args) throws Exception {
+		DatagramSocket socket = new DatagramSocket();
 		InetAddress IPAddress = InetAddress.getByName("localhost");
+		Crypto crypto = new Crypto();
 		while (true) {
-			byte[] send;
-			byte receive[] = new byte[6000];
-			String sendString = in.readLine();
-			send = sendString.getBytes();
-			DatagramPacket sendPacket = new DatagramPacket(send, send.length, IPAddress, 4000);
-			clientSocket.send(sendPacket);
-			DatagramPacket receivePacket = new DatagramPacket(receive, receive.length);
-			clientSocket.receive(receivePacket);
-			String receivedMessage = new String(receivePacket.getData());
-			System.out.println("RECEIVED: " + receivedMessage);
+			handshake(socket,crypto,IPAddress);
+			dataTransfer(socket,crypto,IPAddress);
 		}
 		//clientSocket.close();
 	}
@@ -39,11 +31,15 @@ class newServer {
 		data = crypto.getP();
 		packet = new DatagramPacket(data, data.length,IPAddress,4000);
 		socket.send(packet);
+		//send pubKey
+		data = crypto.getPub();
+		packet = new DatagramPacket(data, data.length,IPAddress,4000);
+		socket.send(packet);
 		//Send Secret
 		data = crypto.sendSecret();
 		packet = new DatagramPacket(data, data.length,IPAddress,4000);
 		socket.send(packet);
-		//Recieve Client pubkey
+		//Receive Client pubkey
 		data = new byte[5120];
 		packet = new DatagramPacket(data, data.length);
 		socket.receive(packet);
@@ -53,20 +49,36 @@ class newServer {
 		socket.receive(packet);
 		crypto.deriveKey(publicKey, packet.getData());
 		return;
-		
-		
-		
-		
 	}
-	private void dataTransfer(DatagramSocket Socket, Crypto crypto) throws IOException {
+	private void dataTransfer(DatagramSocket socket, Crypto crypto, InetAddress IPAddress) throws IOException {
+		//Read Msg and  to be sent convert to byte array
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("Message: ");
 		byte[] msg = in.readLine().getBytes(StandardCharsets.UTF_8);
-		msg = crypto.encrypt(msg);
-		byte[] mac = crypto.mac(msg);
-		byte[] data = new byte[(mac.length + msg.length)];
-		DatagramPacketpacket = new DatagramPacket(data, data.length,IPAddress,4000);
-		
+		//make room for timestamp
+		byte[] crypt = new byte[msg.length + 1];
+		for(int i = 1; i < msg.length + 2; i++ ) {
+			crypt[i] = msg[i - 1 ];
+		}
+		Long time = new Long(System.currentTimeMillis());
+		byte byteTime = time.byteValue();¨
+		//insert time stamp and encrypt result
+		crypt[0] = byteTime;
+		crypt = crypto.encrypt(crypt);
+		//Create MAC
+		byte[] mac = crypto.mac(crypt);
+		//new byte array, insert MAC bytes to first X
+		byte[] data = new byte[(mac.length + crypt.length)];
+		for(int i = 0; i < mac.length; i++ ) {
+			data[i] = mac[i];
+		}
+		//Fill up the rest of the array with the encrypted data
+		for(int i = 0; i < crypt.length; i++ ) {
+			data[i + (mac.length - 1)] = crypt[i];
+		}
+		//send result
+		DatagramPacket packet = new DatagramPacket(data, data.length,IPAddress,4000);
+		socket.send(packet);
+		return;
 	}
-
 }

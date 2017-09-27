@@ -62,8 +62,6 @@ public class Crypto {
 		DHKeyPairGenerator keyGen = new DHKeyPairGenerator();
 		keyGen.init(new DHKeyGenerationParameters(new SecureRandom(), DHPara));
 		keyPair = keyGen.generateKeyPair();
-		//DHPubKeyPara = new DHPublicKeyParameters( pubKey.getY() ,DHPara);
-		//DHPrivKeyPara = new DHPrivateKeyParameters(privKey.getX(),DHPara);
 		DHPubKeyPara = (DHPublicKeyParameters) keyPair.getPublic();
 		DHPrivKeyPara = (DHPrivateKeyParameters) keyPair.getPrivate();
 		secretGen = new DHAgreement();
@@ -76,6 +74,9 @@ public class Crypto {
 	}
 	public byte[] getG() {
 		return DHPara.getG().toByteArray();
+	}
+	public byte[] getPub() {
+		return DHPubKey.getY();
 	}
 	public byte[] sendSecret() {
 		return secretGen.calculateMessage().toByteArray();
